@@ -1,0 +1,118 @@
+# ══════════════════════════════════════════════════════════════════
+# 1. SETUP DATA (Run these first)
+# ══════════════════════════════════════════════════════════════════
+
+# Create an Active Election
+mutation {
+  createElection(
+    id: 1, 
+    name: "2024 Presidential Election", 
+    startDate: "2024-01-01", 
+    endDate: "2024-12-31"
+  ) {
+    id
+    name
+    status
+  }
+}
+
+# Create a Candidate for that Election
+mutation {
+  createCandidate(
+    id: 2, 
+    electionId: 1, 
+    name: "John Doe", 
+    party: "Innovation Party"
+  ) {
+    id
+    name
+    party
+  }
+}
+
+# Register a Voter
+mutation {
+  registerVoter(
+    id: 99, 
+    name: "Alice Smith", 
+    email: "alice@example.com", 
+    voterIdNumber: "V-998877"
+  ) {
+    id
+    hasVoted
+  }
+}
+
+# ══════════════════════════════════════════════════════════════════
+# 2. GENERAL QUERIES
+# ══════════════════════════════════════════════════════════════════
+
+# Get all currently active elections
+query {
+  activeElections {
+    id
+    name
+    endDate
+    status
+  }
+}
+
+# ══════════════════════════════════════════════════════════════════
+# 3. VOTING (Cast a Vote)
+# ══════════════════════════════════════════════════════════════════
+
+mutation {
+  castVote(input: { 
+    electionId: 1, 
+    voterId: 99, 
+    candidateId: 2 
+  }) {
+    ballot {
+      id
+      votedAt
+    }
+  }
+}
+
+# ══════════════════════════════════════════════════════════════════
+# 4. CLOSING & RESULTS
+# ══════════════════════════════════════════════════════════════════
+
+# Close the election (Calculates results automatically)
+mutation {
+  closeElection(id: 1) {
+    election {
+      id
+      status
+    }
+  }
+}
+
+# View the final results
+query {
+  results(electionId: 1) {
+    totalVotes
+    candidate {
+      name
+      party
+    }
+  }
+}
+
+# ══════════════════════════════════════════════════════════════════
+# 5. TEST EXPECTED FAILURES (Edge Cases)
+# ══════════════════════════════════════════════════════════════════
+
+# A. Try to vote again with the same Voter ID (Should fail)
+mutation {
+  castVote(input: { electionId: 1, voterId: 99, candidateId: 2 }) {
+    ballot { id }
+  }
+}
+
+# B. Try to vote in an election that is now closed (Should fail)
+mutation {
+  castVote(input: { electionId: 1, voterId: 100, candidateId: 2 }) {
+    ballot { id }
+  }
+}
